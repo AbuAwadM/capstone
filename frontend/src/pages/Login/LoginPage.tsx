@@ -5,7 +5,7 @@ import DashboardPage from "../Dashboard/DashboardPage";
 
 const validateForm = (username: string, password: string): boolean => {
   if (!username || !password) {
-    alert("Please fill in all fields.");
+    alert("Please fill in all fields. \n Username: admin \n Password: omnishop ");
     return false;
   }
   return true;
