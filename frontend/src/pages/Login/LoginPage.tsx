@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import Button from "../../components/ui/Button";
 import users from "../../data/users.json";
-import DashboardPage from "../Dashboard/DashboardPage";
+import { PATHS } from "../../routes/paths";
 
 const validateForm = (username: string, password: string): boolean => {
   if (!username || !password) {
@@ -16,7 +17,7 @@ const validateForm = (username: string, password: string): boolean => {
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   const handleLogin = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,10 +26,8 @@ function LoginPage() {
       alert("User not found.");
       return;
     }
-    setIsLoggedIn(true);
+    navigate(PATHS.dashboard);
   };
-
-  if (isLoggedIn) return <DashboardPage onLogout={() => setIsLoggedIn(false)} />;
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">

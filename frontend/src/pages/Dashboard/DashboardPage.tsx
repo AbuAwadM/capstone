@@ -1,6 +1,3 @@
-import { useState } from "react";
-import Sidebar from "../../components/layout/Sidebar";
-import AgentConsolePage from "../AgentConsole";
 import dummyInsightsData from "../../data/dummyInsightsData.json";
 
 type InsightFormat = "currency" | "percent" | "number";
@@ -17,10 +14,6 @@ interface DashboardCardProps {
   title: string;
   value: string;
   iconSrc: string;
-}
-
-interface DashboardPageProps {
-  onLogout: () => void;
 }
 
 // Bootstrap only provides row-cols classes for 1 to 6.
@@ -56,40 +49,25 @@ function DashboardCard({ title, value, iconSrc }: DashboardCardProps) {
   );
 }
 
-function DashboardPage({ onLogout }: DashboardPageProps) {
-  const [activeKey, setActiveKey] = useState("dashboard");
-
+function DashboardPage() {
   return (
-    <div className="d-flex bg-light">
-      <Sidebar
-        activeKey={activeKey}
-        onSelect={setActiveKey}
-        onLogout={onLogout}
-      />
-      <main className="flex-grow-1 p-5">
-        {activeKey === "agent-console" ? (
-          <AgentConsolePage />
-        ) : (
-          <>
-            <h1 className="fw-bold mb-4">Dashboard</h1>
+    <>
+      <h1 className="fw-bold mb-4">Dashboard</h1>
 
-            <div
-              className={`row g-4 row-cols-1 row-cols-md-2 row-cols-xl-${CARDS_PER_ROW}`}
-            >
-              {insights.map((insight) => (
-                <div key={insight.id} className="col">
-                  <DashboardCard
-                    title={insight.title}
-                    value={formatters[insight.format].format(insight.value)}
-                    iconSrc={getIconUrl(insight.icon)}
-                  />
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+      <div
+        className={`row g-4 row-cols-1 row-cols-md-2 row-cols-xl-${CARDS_PER_ROW}`}
+      >
+        {insights.map((insight) => (
+          <div key={insight.id} className="col">
+            <DashboardCard
+              title={insight.title}
+              value={formatters[insight.format].format(insight.value)}
+              iconSrc={getIconUrl(insight.icon)}
+            />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
