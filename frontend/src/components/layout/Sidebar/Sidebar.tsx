@@ -3,9 +3,10 @@ import { navLinks } from "../../../constants/navLinks";
 interface SidebarProps {
   activeKey: string;
   onSelect: (key: string) => void;
+  onLogout: () => void;
 }
 
-function Sidebar({ activeKey, onSelect }: SidebarProps) {
+function Sidebar({ activeKey, onSelect, onLogout }: SidebarProps) {
   return (
     <aside
       className="d-flex flex-column flex-shrink-0 p-3 bg-white border-end min-vh-100"
@@ -22,11 +23,21 @@ function Sidebar({ activeKey, onSelect }: SidebarProps) {
               }`}
               onClick={() => onSelect(link.key)}
             >
+              <i className={`bi ${link.icon} me-2`} aria-hidden="true"></i>
               {link.label}
             </button>
           </li>
         ))}
       </ul>
+
+      <button
+        type="button"
+        className="btn btn-outline-secondary btn-sm w-100 mt-auto"
+        onClick={onLogout}
+      >
+        <i className="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
+        Log out
+      </button>
     </aside>
   );
 }

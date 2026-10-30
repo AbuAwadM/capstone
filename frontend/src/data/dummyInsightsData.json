@@ -1,0 +1,9 @@
+[
+  { "id": "total-sales", "title": "Total Sales", "value": 1847.25, "format": "currency", "icon": "react.svg" },
+  { "id": "current-orders", "title": "Current Orders", "value": 7, "format": "number", "icon": "react.svg" },
+  { "id": "inventory-value", "title": "Inventory Value", "value": 18432.6, "format": "currency", "icon": "react.svg" },
+  { "id": "inventory-items", "title": "Items in Inventory", "value": 624, "format": "number", "icon": "react.svg" },
+  { "id": "total-products", "title": "Total Products", "value": 48, "format": "number", "icon": "react.svg" },
+  { "id": "customers-today", "title": "Customers Today", "value": 31, "format": "number", "icon": "react.svg" },
+  { "id": "purchase-success-rate", "title": "Successful Purchases", "value": 0.912, "format": "percent", "icon": "react.svg" }
+]

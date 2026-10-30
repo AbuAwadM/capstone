@@ -5,7 +5,9 @@ import DashboardPage from "../Dashboard/DashboardPage";
 
 const validateForm = (username: string, password: string): boolean => {
   if (!username || !password) {
-    alert("Please fill in all fields. \n Username: admin \n Password: omnishop ");
+    alert(
+      "Please fill in all fields. \n Username: admin \n Password: omnishop ",
+    );
     return false;
   }
   return true;
@@ -26,7 +28,7 @@ function LoginPage() {
     setIsLoggedIn(true);
   };
 
-  if (isLoggedIn) return <DashboardPage />;
+  if (isLoggedIn) return <DashboardPage onLogout={() => setIsLoggedIn(false)} />;
 
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
