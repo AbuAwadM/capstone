@@ -1,5 +1,5 @@
 function CustomersPage() {
-  return <h1 className="fw-bold">Customers</h1>;
+  return <h1>Customers</h1>;
 }
 
 export default CustomersPage;

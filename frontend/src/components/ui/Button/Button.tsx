@@ -12,20 +12,13 @@ interface ButtonProps {
 
 function Button({
   children,
-  variant = "primary",
-  size = "md",
   type = "button",
   disabled = false,
   onClick,
 }: ButtonProps) {
-  const variantClass =
-    variant === "outline" ? "btn-outline-primary" : `btn-${variant}`;
-  const sizeClass = size === "md" ? "" : `btn-${size}`;
-
   return (
     <button
       type={type}
-      className={`btn ${variantClass} ${sizeClass}`}
       disabled={disabled}
       onClick={onClick}
     >

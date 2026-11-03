@@ -24,4 +24,4 @@ Vite starts a dev server with hot reload, by default at http://localhost:5173.
 
 ## Styling
 
-We are using **Bootstrap** for now as a temporary styling solution. We plan to switch to **Tailwind CSS** later (`tailwindcss` and `@tailwindcss/vite` are already installed and the plugin is registered in `frontend/vite.config.ts`). Once the switch happens, Bootstrap will be removed.
+Bootstrap has been removed. We plan to style the app with **Tailwind CSS** (`tailwindcss` and `@tailwindcss/vite` are already installed and the plugin is registered in `frontend/vite.config.ts`).

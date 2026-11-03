@@ -1,5 +1,5 @@
 function SettingsPage() {
-  return <h1 className="fw-bold">Settings</h1>;
+  return <h1>Settings</h1>;
 }
 
 export default SettingsPage;

@@ -16,9 +16,6 @@ interface DashboardCardProps {
   iconSrc: string;
 }
 
-// Bootstrap only provides row-cols classes for 1 to 6.
-const CARDS_PER_ROW = 4;
-
 const insights = dummyInsightsData as Insight[];
 
 const formatters: Record<InsightFormat, Intl.NumberFormat> = {
@@ -39,11 +36,11 @@ function getIconUrl(fileName: string) {
 
 function DashboardCard({ title, value, iconSrc }: DashboardCardProps) {
   return (
-    <div className="card shadow-sm h-100 ratio ratio-1x1">
-      <div className="card-body p-4 d-flex flex-column justify-content-center align-items-center text-center">
-        <img src={iconSrc} alt="" width={40} height={40} className="mb-3" />
-        <p className="text-muted mb-2">{title}</p>
-        <p className="fs-3 fw-bold mb-0">{value}</p>
+    <div>
+      <div>
+        <img src={iconSrc} alt="" width={40} height={40} />
+        <p>{title}</p>
+        <p>{value}</p>
       </div>
     </div>
   );
@@ -52,13 +49,11 @@ function DashboardCard({ title, value, iconSrc }: DashboardCardProps) {
 function DashboardPage() {
   return (
     <>
-      <h1 className="fw-bold mb-4">Dashboard</h1>
+      <h1>Dashboard</h1>
 
-      <div
-        className={`row g-4 row-cols-1 row-cols-md-2 row-cols-xl-${CARDS_PER_ROW}`}
-      >
+      <div>
         {insights.map((insight) => (
-          <div key={insight.id} className="col">
+          <div key={insight.id}>
             <DashboardCard
               title={insight.title}
               value={formatters[insight.format].format(insight.value)}
