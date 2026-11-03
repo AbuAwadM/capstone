@@ -4,6 +4,9 @@ import Button from "../../components/ui/Button";
 import users from "../../data/users.json";
 import { PATHS } from "../../routes/paths";
 
+const inputClassName =
+  "mt-1 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
+
 const validateForm = (username: string, password: string): boolean => {
   if (!username || !password) {
     alert(
@@ -30,40 +33,36 @@ function LoginPage() {
   };
 
   return (
-    <div>
-      <div style={{ maxWidth: "400px" }}>
-        <div>
-          <h1>Omnishop</h1>
-          <p>Log in to your account</p>
+    <div className="flex justify-center items-center h-screen bg-gray-50">
+      <div className="w-full max-w-100 p-12 bg-white rounded-xl shadow-sm">
+        <div className="mb-6 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 my-2">Omnishop</h1>
+          <p className="text-gray-600">Log in to your account</p>
         </div>
-        <form onSubmit={handleLogin}>
-          <div>
-            <label htmlFor="username">
-              Username
-            </label>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="flex flex-col">
+            <label htmlFor="username">Username</label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              className={inputClassName}
             />
           </div>
-          <div>
-            <label htmlFor="password">
-              Password
-            </label>
+          <div className="flex flex-col">
+            <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className={inputClassName}
             />
           </div>
-          <div>
-            <Button variant="primary" type="submit">
-              Login
-            </Button>
-          </div>
+          <Button type="submit" className="w-full">
+            Login
+          </Button>
         </form>
       </div>
     </div>

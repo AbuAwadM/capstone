@@ -5,9 +5,9 @@ import Sidebar from "../Sidebar";
 // and the current page (picked by the router) rendered in <Outlet />.
 function MainLayout() {
   return (
-    <div>
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main>
+      <main className="flex-1 overflow-hidden bg-gray-100">
         <Outlet />
       </main>
     </div>
