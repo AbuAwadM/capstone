@@ -1,0 +1,7 @@
+[
+  { "id": 1, "profilePicture": "https://placehold.co/64?text=JD", "sender": "John Doe", "time": "10:30 AM", "platform": "whatsapp" },
+  { "id": 2, "profilePicture": "https://placehold.co/64?text=SK", "sender": "Sara Khalil", "time": "10:12 AM", "platform": "instagram" },
+  { "id": 3, "profilePicture": "https://placehold.co/64?text=OH", "sender": "Omar Haddad", "time": "9:47 AM", "platform": "facebook" },
+  { "id": 4, "profilePicture": "https://placehold.co/64?text=LN", "sender": "Lina Nasser", "time": "Yesterday", "platform": "telegram" },
+  { "id": 5, "profilePicture": "https://placehold.co/64?text=AS", "sender": "Adam Smith", "time": "Yesterday", "platform": "whatsapp" }
+]
