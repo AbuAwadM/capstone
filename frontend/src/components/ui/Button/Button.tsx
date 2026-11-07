@@ -1,23 +1,34 @@
 interface ButtonProps {
   children: React.ReactNode;
-  type?: "button" | "submit";
-  disabled?: boolean;
-  className?: string;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  size?: "small" | "medium" | "large";
+  color?: "primary" | "secondary" | "success" | "danger" | "clear" | "black";
+  onClick?: () => void;
 }
+
+const sizeClasses = {
+  small: "px-2 py-1 text-sm",
+  medium: "px-4 py-2 text-base",
+  large: "px-6 py-3 text-lg",
+};
+
+const colorClasses = {
+  primary: "bg-blue-500 text-white hover:bg-blue-600",
+  secondary: "bg-gray-500 text-white hover:bg-gray-600",
+  success: "bg-green-500 text-white hover:bg-green-600",
+  danger: "bg-red-500 text-white hover:bg-red-600",
+  clear: "text-gray-800 hover:bg-gray-100",
+  black: "bg-black text-white hover:bg-gray-800",
+};
 
 function Button({
   children,
-  type = "button",
-  disabled = false,
-  className = "",
+  size = "small",
+  color = "primary",
   onClick,
 }: ButtonProps) {
   return (
     <button
-      type={type}
-      disabled={disabled}
-      className={`py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 ${className}`}
+      className={`${sizeClasses[size]} ${colorClasses[color]} rounded-lg border border-gray-300 font-medium`}
       onClick={onClick}
     >
       {children}
