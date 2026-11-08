@@ -3,6 +3,8 @@ interface ButtonProps {
   size?: "small" | "medium" | "large";
   color?: "primary" | "secondary" | "success" | "danger" | "clear" | "black";
   onClick?: () => void;
+  type?: "button" | "submit" | "reset";
+  className?: string;
 }
 
 const sizeClasses = {
@@ -25,11 +27,14 @@ function Button({
   size = "small",
   color = "primary",
   onClick,
+  type,
+  className = "",
 }: ButtonProps) {
   return (
     <button
-      className={`${sizeClasses[size]} ${colorClasses[color]} rounded-lg border border-gray-300 font-medium`}
+      className={`${sizeClasses[size]} ${colorClasses[color]} rounded-lg border border-gray-300 font-medium ${className}`}
       onClick={onClick}
+      type={type}
     >
       {children}
     </button>
