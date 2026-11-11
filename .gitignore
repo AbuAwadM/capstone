@@ -1,0 +1,42 @@
+# Root .gitignore — repo-wide rules.
+# frontend/.gitignore and backend/.gitignore hold the stack-specific rules.
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Dependencies (safety net in case new sub-projects are added)
+node_modules/
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build output
+dist/
+dist-ssr/
+build/
+coverage/
+htmlcov/
