@@ -11,9 +11,9 @@ ConversationStatus = Literal["open", "pending", "closed"]
 AIMode = Literal["review_first", "auto_send"]
 Sender = Literal["customer", "agent"]
 
-# SQLite doesn't keep timezone info, so times come back "naive".
-# They are always stored in UTC, so mark them as UTC; the JSON then ends
-# with "+00:00" and the browser converts it to the user's local time.
+# Times are always stored in UTC. Postgres returns them timezone-aware,
+# but if one ever comes back "naive" (no timezone), mark it as UTC so the
+# JSON always ends with "+00:00" and the browser converts it to local time.
 UTCDateTime = Annotated[
     datetime,
     AfterValidator(lambda d: d.replace(tzinfo=UTC) if d.tzinfo is None else d),

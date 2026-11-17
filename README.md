@@ -25,3 +25,18 @@ Vite starts a dev server with hot reload, by default at http://localhost:5173.
 ## Styling
 
 Bootstrap has been removed. We plan to style the app with **Tailwind CSS** (`tailwindcss` and `@tailwindcss/vite` are already installed and the plugin is registered in `frontend/vite.config.ts`).
+
+## Running the backend (dev)
+
+The backend uses **PostgreSQL**. A local database is defined in `docker-compose.yml`:
+
+```bash
+docker compose up -d          # from the repo root; starts Postgres on localhost:5432
+cd backend
+cp .env.example .env          # first time only
+uv sync                       # install dependencies
+uv run python -m db.seed      # optional: add sample data
+uv run python main.py         # API at http://localhost:8000 (docs at /docs)
+```
+
+Tables are created automatically on startup. `DATABASE_URL` can be any Postgres URL; `postgres://` and `postgresql://` URLs from hosting providers are switched to the `psycopg` driver automatically.
