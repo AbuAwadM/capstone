@@ -75,7 +75,7 @@ jobs:
         with:
           working-directory: backend
           enable-cache: true
-          cache-dependency-glob: backend/uv.lock
+          cache-dependency-glob: uv.lock # relative to working-directory
 
       # --locked fails if uv.lock is out of date with pyproject.toml.
       # Python 3.12 comes from backend/.python-version.

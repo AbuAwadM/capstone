@@ -18,6 +18,9 @@ services:
     envVars:
       - key: UV_PYTHON_DOWNLOADS
         value: never
+      # Same as backend/.python-version and CI.
+      - key: PYTHON_VERSION
+        value: 3.12.14
       # Set these in the Render dashboard (sync: false = not stored in git).
       # DATABASE_URL: Neon connection string (direct, not "-pooler"; the app
       # keeps its own SQLAlchemy pool). postgres:// URLs are fine, see db/database.py.

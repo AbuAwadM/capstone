@@ -13,6 +13,13 @@ updates:
     directory: /frontend
     schedule:
       interval: monthly
+    ignore:
+      # typescript-eslint doesn't support TypeScript 7 yet (see README).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # Keep Node types on the major version CI and Vercel run (Node 24).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
