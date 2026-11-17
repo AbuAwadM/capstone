@@ -1,0 +1,161 @@
+# Production deployment: CI -> backend (Render) -> frontend (Vercel).
+# The backend goes first so the live frontend never calls an older API.
+#
+# Required in the "production" GitHub environment:
+#   secrets: VERCEL_TOKEN, RENDER_API_KEY
+#   vars:    VERCEL_ORG_ID, VERCEL_PROJECT_ID, RENDER_SERVICE_ID,
+#            BACKEND_URL (e.g. https://omnishop-api.onrender.com),
+#            FRONTEND_URL (e.g. https://<project>.vercel.app)
+# The Neon DATABASE_URL lives only in Render's environment, never in GitHub.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # manual run deploys both apps
+
+permissions:
+  contents: read
+
+# One production deployment at a time; never cancel one halfway through.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
+      frontend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.frontend == 'true' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'render.yaml'
+            frontend:
+              - 'frontend/**'
+
+  deploy-backend:
+    name: Deploy backend (Render)
+    needs: [ci, changes]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.BACKEND_URL }}
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+      COMMIT_SHA: ${{ github.sha }}
+    steps:
+      # Deploys this exact commit (not "latest on main") and waits for the result.
+      - name: Trigger Render deploy
+        id: trigger
+        run: |
+          response=$(curl -fsS -X POST \
+            "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Accept: application/json" -H "Content-Type: application/json" \
+            -d "{\"commitId\": \"${COMMIT_SHA}\", \"clearCache\": \"do_not_clear\"}")
+          deploy_id=$(echo "$response" | jq -r '.id')
+          if [ -z "$deploy_id" ] || [ "$deploy_id" = "null" ]; then
+            echo "::error::Unexpected Render response: $response"; exit 1
+          fi
+          echo "deploy_id=$deploy_id" >> "$GITHUB_OUTPUT"
+          echo "Started Render deploy $deploy_id for $COMMIT_SHA"
+
+      - name: Wait for deploy to go live
+        env:
+          DEPLOY_ID: ${{ steps.trigger.outputs.deploy_id }}
+        run: |
+          for _ in $(seq 1 90); do  # up to ~15 minutes
+            status=$(curl -fsS \
+              "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/${DEPLOY_ID}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}" -H "Accept: application/json" \
+              | jq -r '.status')
+            echo "Render status: $status"
+            case "$status" in
+              live) exit 0 ;;
+              build_failed|update_failed|pre_deploy_failed|canceled|deactivated)
+                echo "::error::Render deploy ended with status '$status'"; exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Timed out waiting for Render deploy"; exit 1
+
+      # /api/conversations also proves the service can reach Neon.
+      - name: Smoke test
+        run: |
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors --max-time 60 "${BACKEND_URL}/health"
+          curl -fsS --retry 5 --retry-delay 6 --retry-all-errors --max-time 60 "${BACKEND_URL}/api/conversations" > /dev/null
+          echo "Backend is healthy and connected to the database."
+
+  deploy-frontend:
+    name: Deploy frontend (Vercel)
+    needs: [ci, changes, deploy-backend]
+    # Run when the frontend changed, CI passed, and the backend deploy
+    # either succeeded or was not needed.
+    if: >-
+      always() &&
+      needs.ci.result == 'success' &&
+      needs.changes.outputs.frontend == 'true' &&
+      (needs.deploy-backend.result == 'success' || needs.deploy-backend.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ vars.FRONTEND_URL }}
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@65.17.0
+
+      # Build in CI and upload the prebuilt output, so exactly what was
+      # built here (from the CI-verified commit) is what goes live.
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+      # Checks the SPA and the /api rewrite to Render (end-to-end).
+      - name: Smoke test
+        run: |
+          curl -fsS --retry 5 --retry-delay 5 --retry-all-errors "${FRONTEND_URL}/" > /dev/null
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors --max-time 60 "${FRONTEND_URL}/api/conversations" > /dev/null
+          echo "Frontend is live and reaching the backend through /api."

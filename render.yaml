@@ -1,0 +1,28 @@
+# Render Blueprint for the FastAPI backend.
+# Deploys are triggered by .github/workflows/deploy.yml after CI passes,
+# so Render's own auto-deploy is turned off.
+services:
+  - type: web
+    name: omnishop-api # URL becomes https://omnishop-api.onrender.com if the name is free
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon # keep the same region as your Neon project (Neon: AWS us-west-2)
+    autoDeployTrigger: "off"
+    # UV_PYTHON_DOWNLOADS=never makes uv use Render's Python (picked from
+    # backend/.python-version) instead of downloading one outside the
+    # deployed directory.
+    buildCommand: pip install uv && uv sync --locked --no-dev
+    startCommand: .venv/bin/uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /health
+    envVars:
+      - key: UV_PYTHON_DOWNLOADS
+        value: never
+      # Set these in the Render dashboard (sync: false = not stored in git).
+      # DATABASE_URL: Neon connection string (direct, not "-pooler"; the app
+      # keeps its own SQLAlchemy pool). postgres:// URLs are fine, see db/database.py.
+      - key: DATABASE_URL
+        sync: false
+      # ALLOWED_ORIGINS: your Vercel production URL, e.g. https://<project>.vercel.app
+      - key: ALLOWED_ORIGINS
+        sync: false
