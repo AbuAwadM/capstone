@@ -42,6 +42,12 @@ app.add_middleware(
 app.include_router(conversations_router, prefix=settings.API_PREFIX)
 
 
+@app.get("/health", include_in_schema=False)
+def health():
+    """Liveness check used by Render and the CI/CD smoke tests."""
+    return {"status": "ok"}
+
+
 if __name__ == "__main__":
     import uvicorn
 

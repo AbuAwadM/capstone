@@ -1,0 +1,108 @@
+# Continuous integration: runs on every pull request, and is called by
+# deploy.yml so production is only deployed from a commit that passed it.
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+# Cancel superseded runs on a PR. When called from deploy.yml, use a unique
+# group so a newer push never cancels CI inside an in-flight deployment.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('ci-{0}', github.ref) || format('ci-{0}', github.run_id) }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build # tsc -b && vite build
+
+  backend:
+    name: Backend (tests + smoke test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+
+    # Same image and credentials as docker-compose.yml.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: omnishop
+          POSTGRES_PASSWORD: omnishop
+          POSTGRES_DB: omnishop
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U omnishop -d omnishop"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://omnishop:omnishop@localhost:5432/omnishop
+      ALLOWED_ORIGINS: http://localhost:5173
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          working-directory: backend
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      # --locked fails if uv.lock is out of date with pyproject.toml.
+      # Python 3.12 comes from backend/.python-version.
+      - run: uv sync --locked
+
+      - name: Run tests
+        run: |
+          set +e
+          uv run pytest
+          code=$?
+          # Exit code 5 = no tests collected (test files are still empty).
+          if [ "$code" -eq 5 ]; then
+            echo "::warning::No backend tests were collected."
+            exit 0
+          fi
+          exit "$code"
+
+      # Exercises startup (create_tables), the seed script and a real
+      # request through SQLAlchemy against Postgres 17.
+      - name: Smoke test API against Postgres
+        run: |
+          uv run python -m db.seed
+          uv run uvicorn main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          curl -fsS --retry 30 --retry-delay 1 --retry-connrefused http://127.0.0.1:8000/health
+          curl -fsS http://127.0.0.1:8000/api/conversations \
+            | uv run python -c "import json,sys; d=json.load(sys.stdin); assert len(d) == 8, d; print(f'OK: {len(d)} conversations')"
+
+      - name: Show server log on failure
+        if: failure()
+        run: cat uvicorn.log || true
