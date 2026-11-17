@@ -120,9 +120,8 @@ jobs:
     environment:
       name: production
       url: ${{ vars.FRONTEND_URL }}
-    defaults:
-      run:
-        working-directory: frontend
+    # The Vercel CLI runs from the repo root: the Vercel project's
+    # "Root Directory" setting is "frontend", so the CLI changes into it.
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
