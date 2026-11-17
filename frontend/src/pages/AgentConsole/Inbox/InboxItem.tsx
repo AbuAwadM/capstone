@@ -1,4 +1,4 @@
-type Platform = "instagram" | "facebook" | "whatsapp" | "telegram";
+import type { Platform } from "@/api/conversations";
 
 const PLATFORMS: Record<Platform, { label: string; badge: string }> = {
   instagram: { label: "Instagram", badge: "bg-pink-100 text-pink-700" },
