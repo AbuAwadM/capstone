@@ -1,0 +1,26 @@
+
+{
+  "sales": [
+    {
+      "product_id": 1,
+      "product_name": "Linen throw blanket",
+      "quantity_sold": 45,
+      "unit_price": 68,
+      "revenue": 3060
+    },
+    {
+      "product_id": 2,
+      "product_name": "Linen cushion cover",
+      "quantity_sold": 30,
+      "unit_price": 29,
+      "revenue": 870
+    },
+    {
+      "product_id": 3,
+      "product_name": "Leather card wallet",
+      "quantity_sold": 10,
+      "unit_price": 39,
+      "revenue": 390
+    }
+  ]
+}
