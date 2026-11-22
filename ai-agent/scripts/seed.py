@@ -4,15 +4,18 @@ from pathlib import Path
 
 from sqlalchemy import select
 
-from database import Base, engine, SessionLocal
-from models import Product, Order, Sale
+from app.db.database import Base, engine, SessionLocal
+from app.db.models import Product, Order, Sale
 
 
-BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
 
 
 def load_json(filename, key):
-    with open(BASE_DIR / filename, "r", encoding="utf-8") as file:
+    file_path = DATA_DIR / filename
+
+    with open(file_path, "r", encoding="utf-8") as file:
         return json.load(file)[key]
 
 
@@ -38,14 +41,15 @@ def seed_database():
                     Product(
                         name=item["name"],
                         price=item["price"],
-                        stock=item["stock"]
+                        stock=item["stock"],
                     )
                 )
 
         # Insert orders
         for item in orders:
             existing_order = session.get(
-                Order, item["order_id"]
+                Order,
+                item["order_id"],
             )
 
             if existing_order is None:
@@ -54,7 +58,8 @@ def seed_database():
         # Insert sales
         for item in sales:
             existing_sale = session.get(
-                Sale, item["product_id"]
+                Sale,
+                item["product_id"],
             )
 
             if existing_sale is None:

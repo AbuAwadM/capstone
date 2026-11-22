@@ -12,8 +12,7 @@ from openai import (
     APIStatusError
 )
 
-from agent_service import ask_agent
-
+from app.agent.service import ask_agent
 
 load_dotenv()
 

@@ -1,8 +1,8 @@
 
-from sqlalchemy import Integer, String, Float
+from sqlalchemy import Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database import Base
+from app.db.database import Base
 
 
 class Product(Base):
@@ -10,22 +10,22 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(
         Integer,
-        primary_key=True
+        primary_key=True,
     )
 
     name: Mapped[str] = mapped_column(
         String(200),
-        nullable=False
+        nullable=False,
     )
 
     price: Mapped[float] = mapped_column(
         Float,
-        nullable=False
+        nullable=False,
     )
 
     stock: Mapped[int] = mapped_column(
         Integer,
-        nullable=False
+        nullable=False,
     )
 
 
@@ -34,42 +34,42 @@ class Order(Base):
 
     order_id: Mapped[str] = mapped_column(
         String(50),
-        primary_key=True
+        primary_key=True,
     )
 
     customer_id: Mapped[str] = mapped_column(
         String(50),
-        nullable=False
+        nullable=False,
     )
 
     customer_name: Mapped[str] = mapped_column(
         String(200),
-        nullable=False
+        nullable=False,
     )
 
     product: Mapped[str] = mapped_column(
         String(200),
-        nullable=False
+        nullable=False,
     )
 
     quantity: Mapped[int] = mapped_column(
         Integer,
-        nullable=False
+        nullable=False,
     )
 
     total: Mapped[float] = mapped_column(
         Float,
-        nullable=False
+        nullable=False,
     )
 
     currency: Mapped[str] = mapped_column(
         String(10),
-        nullable=False
+        nullable=False,
     )
 
     status: Mapped[str] = mapped_column(
         String(50),
-        nullable=False
+        nullable=False,
     )
 
 
@@ -78,25 +78,25 @@ class Sale(Base):
 
     product_id: Mapped[int] = mapped_column(
         Integer,
-        primary_key=True
+        primary_key=True,
     )
 
     product_name: Mapped[str] = mapped_column(
         String(200),
-        nullable=False
+        nullable=False,
     )
 
     quantity_sold: Mapped[int] = mapped_column(
         Integer,
-        nullable=False
+        nullable=False,
     )
 
     unit_price: Mapped[float] = mapped_column(
         Float,
-        nullable=False
+        nullable=False,
     )
 
     revenue: Mapped[float] = mapped_column(
         Float,
-        nullable=False
+        nullable=False,
     )

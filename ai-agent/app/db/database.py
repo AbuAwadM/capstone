@@ -6,17 +6,18 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 DEFAULT_DATABASE_URL = (
-    f"sqlite:///{(BASE_DIR / 'omnishop.db').as_posix()}"
+    f"sqlite:///{(PROJECT_ROOT / 'omnishop.db').as_posix()}"
 )
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    DEFAULT_DATABASE_URL
+    DEFAULT_DATABASE_URL,
 )
 
 connect_args = (
@@ -27,13 +28,13 @@ connect_args = (
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args=connect_args
+    connect_args=connect_args,
 )
 
 SessionLocal = sessionmaker(
     bind=engine,
     autoflush=False,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
 

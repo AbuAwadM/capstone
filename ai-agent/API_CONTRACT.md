@@ -2,65 +2,103 @@
 
 ## 1. Purpose
 
-This document defines the integration contract between the OmniShop main backend (NestJS) and the AI Agent service (Python/FastAPI).
+This document defines the integration contract between the OmniShop main backend (FastAPI) and the standalone OmniShop AI Agent service (FastAPI).
 
-The AI Agent supports product information retrieval, customer order status queries, and owner sales analysis.
+The Agent provides conversational shopping assistance and supports three business functions:
+
+1. Product catalog search.
+2. Customer order status inquiries.
+3. Owner sales analysis.
+
+This contract documents the currently implemented Agent API. Integration with the main backend remains pending.
 
 ## 2. System Architecture
 
-The proposed communication flow is:
+The intended communication flow is:
 
-**OmniShop Frontend → NestJS Backend → FastAPI Agent → Agent Tools → Data Source**
+```text
+OmniShop Frontend / Messaging Channel
+                  |
+                  v
+          Main FastAPI Backend
+                  |
+          Trusted User Context
+                  |
+                  v
+           AI Agent FastAPI
+                  |
+             Agent Service
+                  |
+           Authorized Tools
+                  |
+           Database Services
+                  |
+                Data
+```
 
-The NestJS backend is responsible for authenticating users and determining their permissions.
+The main backend is responsible for authenticating users, determining their permissions, and forwarding authorized requests.
 
-FastAPI processes authorized requests and returns AI-generated responses based on the available business data.
+The AI Agent service processes messages using OpenRouter and retrieves business information through authorized tools.
 
-## 3. API Configuration
+The AI Agent must not accept untrusted user-provided roles or customer identifiers as proof of authorization.
 
-**Framework:** FastAPI
+## 3. Service Configuration
 
-**Development Base URL:** `http://127.0.0.1:8000`
+| Setting | Value |
+|---|---|
+| Framework | FastAPI |
+| Application entry point | `app.main:app` |
+| Local base URL | `http://127.0.0.1:8000` |
+| Health endpoint | `GET /health` |
+| Chat endpoint | `POST /agent/chat` |
+| Content type | `application/json` |
+| Authentication header | `X-Agent-Key` |
 
-**Endpoint:** `POST /agent/chat`
+The local base URL is accessible only from the machine or network where the service is running.
 
-**Content Type:** `application/json`
-
-**Authentication Header:** `X-Agent-Key`
-
-The development URL is valid only when the service is running on the same machine as the caller.
+The production or development deployment URL has not yet been assigned.
 
 ## 4. Internal API Authentication
 
-Each request must include:
+The chat endpoint requires an internal API key.
+
+**Required request header:**
 
 ```http
 X-Agent-Key: YOUR_INTERNAL_API_KEY
 ```
 
-The value must match the `AGENT_INTERNAL_API_KEY` configured in the Agent's `.env` file.
+The supplied key must match the `AGENT_INTERNAL_API_KEY` environment variable configured for the AI Agent service.
 
-Requests without a valid key are rejected with HTTP 401.
+Requests with missing or invalid internal keys return HTTP 401.
 
-The internal key must be stored securely on the backend and must never be exposed to the frontend or end users.
+The internal API key must remain in server-side configuration and must never be exposed to frontend applications or end users.
 
-A shared API key authenticates the calling service, not the individual user. NestJS must independently verify user identity and permissions.
+A shared internal API key authenticates the calling service. It does not independently authenticate the customer or store owner.
 
-Production integration also requires protected network access and HTTPS or equivalent transport security.
+The main backend must derive `role` and `customer_id` from trusted authentication context rather than accepting these values directly from an end user.
 
-## 5. Request Body
+## 5. Chat Endpoint
 
-### Owner Request
+### Request
+
+```http
+POST /agent/chat
+Content-Type: application/json
+X-Agent-Key: YOUR_INTERNAL_API_KEY
+```
+
+### Customer Request Example
 
 ```json
 {
-  "message": "What is the best-selling product?",
-  "role": "owner",
-  "customer_id": null
+  "message": "What is the price of Linen throw blanket?",
+  "role": "customer",
+  "customer_id": "CUST-001"
 }
 ```
 
-### Customer Request
+### Customer Order Status Example
 
 ```json
 {
@@ -70,143 +108,276 @@ Production integration also requires protected network access and HTTPS or equiv
 }
 ```
 
+### Owner Request Example
+
+```json
+{
+  "message": "What is the best-selling product?",
+  "role": "owner",
+  "customer_id": null
+}
+```
+
 ### Request Fields
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| message | string | Yes | User question |
-| role | string | Yes | Verified role: owner or customer |
-| customer_id | string or null | Conditional | Required for customer requests |
+| `message` | string | Yes | Non-empty user message |
+| `role` | string | Yes | `customer` or `owner` |
+| `customer_id` | string or null | Conditional | Required when `role` is `customer` |
 
-**Important:** NestJS must obtain `role` and `customer_id` from its trusted authentication context, not directly from user-submitted JSON.
+The current Agent API validates the supplied role and requires a customer identifier for customer requests.
+
+The main backend must verify both values before forwarding the request.
 
 ## 6. Successful Response
 
-**HTTP Status:** 200 OK
+**HTTP Status:** `200 OK`
+
+The response contains a single `reply` field.
 
 ```json
 {
-  "reply": "The best-selling product is Linen throw blanket, with 45 units sold."
+  "reply": "The product price is $68."
 }
 ```
 
-The `reply` field contains the Agent's response.
+This is an illustrative response using development data.
 
-The example above uses local development data.
+The actual reply is generated dynamically by the AI Agent.
 
-## 7. Supported Agent Tools
+A successful HTTP response does not guarantee that business data was available. If a tool cannot retrieve verified information, the Agent may return an explanatory message in `reply`.
 
-| Tool | Description | Current authorized role |
+## 7. Health Endpoint
+
+### Request
+
+```http
+GET /health
+```
+
+### Response
+
+```json
+{
+  "status": "ok"
+}
+```
+
+The health endpoint does not require the internal API key.
+
+It reports application availability and does not verify live OpenRouter connectivity or database readiness.
+
+## 8. Supported Agent Tools
+
+| Tool | Purpose | Authorized role |
 |---|---|---|
-| search_catalog | Search available products | Customer, Owner |
-| get_order_status | Retrieve a customer's own order status | Customer |
-| get_sales_summary | Retrieve sales totals and best-/least-selling products | Owner |
+| `search_catalog` | Retrieve product details, prices, and stock | Customer, Owner |
+| `get_order_status` | Retrieve an authenticated customer's order status | Customer |
+| `get_sales_summary` | Retrieve sales totals and best-/least-selling products | Owner |
 
-The permissions above reflect the current Agent implementation and must be checked against the approved OmniShop project specification.
+### Product Search
 
-## 8. Error Responses
+The Agent calls `search_catalog` with a product name.
 
-| HTTP Status | Description |
+The tool obtains verified information from the database service.
+
+### Order Status
+
+The Agent calls `get_order_status` with an order identifier.
+
+The associated customer identifier is supplied by the trusted calling backend, not generated by the AI model.
+
+The database query filters by both the order identifier and customer identifier.
+
+### Sales Summary
+
+The Agent exposes `get_sales_summary` only to the owner role.
+
+Customer requests must not be allowed to execute this tool.
+
+The current implementation does not support order creation, payment processing, or modifications to business records.
+
+## 9. Error Responses
+
+| HTTP status | Meaning |
 |---|---|
-| 401 | Missing or invalid internal API key |
-| 403 | Invalid role or missing customer identity |
-| 422 | Invalid request body |
-| 502 | AI provider error or invalid AI response |
-| 503 | AI provider connection failure |
-| 504 | AI provider timeout |
+| `401 Unauthorized` | Missing or incorrect internal API key |
+| `403 Forbidden` | Unsupported role or missing customer identity |
+| `422 Unprocessable Entity` | Invalid request body |
+| `502 Bad Gateway` | AI provider error or response-processing failure |
+| `503 Service Unavailable` | AI provider connection failure |
+| `504 Gateway Timeout` | AI provider timeout |
 
-A valid HTTP 200 response does not necessarily mean that the requested business information was found. The Agent may return a verification failure message in the `reply` field.
+The API currently returns error details in FastAPI's standard format.
 
-## 9. Current Data Source
+**Example:**
 
-The AI Agent uses SQLAlchemy ORM to access a local SQLite database during development.
+```json
+{
+  "detail": "Unauthorized API request"
+}
+```
 
-**Database:** `omnishop.db`
+Tool-level failures may instead return HTTP 200 with an explanatory `reply`, depending on the failure handled by the Agent service.
 
-**Database Components:**
+The calling backend should not assume every HTTP 200 contains verified product, order, or sales information.
+
+## 10. Current Data Access
+
+The AI Agent currently uses SQLAlchemy with a local SQLite database for development.
+
+### Database Components
 
 | File | Responsibility |
 |---|---|
-| `database.py` | Database engine and session configuration |
-| `models.py` | SQLAlchemy models for products, orders, and sales |
-| `schemas.py` | Pydantic schemas for data validation and serialization |
-| `services.py` | Database queries and business data retrieval |
-| `tools.py` | Agent tool interfaces that call the service layer |
-| `seed.py` | Inserts development data into the local database |
+| `app/db/database.py` | Engine and session configuration |
+| `app/db/models.py` | Product, Order, and Sale models |
+| `app/db/schemas.py` | Pydantic schemas |
+| `app/db/services.py` | Database queries |
+| `app/tools/tools.py` | Agent tool interfaces |
+| `scripts/seed.py` | Development database initialization |
 
-**Data Access Flow:**
+Development JSON files are stored under `data/` and are used to populate the local development database.
 
-AI Agent → Tools → Services → SQLAlchemy → Database
+### Current Data Flow
 
-The JSON files (`products.json`, `orders.json`, and `sales.json`) are retained as development seed-data sources. They are no longer the primary data source for the Agent tools.
+```text
+AI Agent
+   |
+Authorized Tool
+   |
+Database Service
+   |
+SQLAlchemy
+   |
+Development Database
+```
 
-**Production Integration:**
+### Production Data Integration
 
-SQLite is used for local development and testing only.
+The main backend has its own models and database layer.
 
-The final database connection, schema, and data-access permissions must be agreed upon with the NestJS backend developer before production integration.
+The Agent's development tables must not be assumed to match the main backend database schema.
 
-The AI Agent must use approved business data and must not independently modify production orders, products, or sales records.
+An approved integration mechanism and authoritative data source must be established with the main backend developer.
 
-## 10. Integration Responsibilities
+The development SQLite database must not be treated as production storage.
 
-### AI Agent Developer
+## 11. Integration Responsibilities
 
-- Maintain the Python Agent service.
-- Maintain the FastAPI endpoint and Agent tools.
-- Validate the current Agent behavior using automated tests.
-- Coordinate the replacement of development data access.
+### AI Agent Component
+
+- Maintain the AI Agent service.
+- Expose the documented FastAPI endpoints.
+- Implement and maintain authorized tool execution.
+- Provide automated tests.
+- Document configuration and error handling.
 - Support integration testing.
 
-### NestJS Backend Developer
+### Main Backend
 
 - Authenticate users.
-- Determine authorized user roles and customer identifiers.
-- Keep the internal API key server-side.
-- Send authorized requests to FastAPI.
-- Return Agent responses to the appropriate OmniShop interface.
-- Provide access to approved business data through the agreed integration mechanism.
+- Determine trusted roles and customer identities.
+- Protect the internal API key.
+- Forward authorized messages to the Agent.
+- Handle response and error conditions.
+- Provide access to authoritative business data through an agreed integration mechanism.
 
 ### Data Preparation
 
-The data team prepares the required dataset and database structure in coordination with backend development.
+The data preparation team coordinates sample datasets and final business data requirements with the backend implementation.
 
-## 11. Integration Status
+## 12. Security Considerations
 
-### Completed
+The current API uses shared-key authentication.
 
-- AI Agent tool implementation.
-- FastAPI endpoint and internal API key validation.
-- Basic role-based tool restrictions.
-- SQLAlchemy models for products, orders, and sales.
-- Pydantic schemas.
-- Service layer for database access.
-- Agent tools connected to the service layer.
-- SQLite development database and seed script.
-- Automated unit, API, and initial database tests.
+Anyone possessing the internal key who can reach the endpoint may submit a role and customer identifier.
 
-**Latest verified test result:** 15 tests passed on November 19, 2026.
+Consequently, the service must not be considered production-secure based on the shared key alone.
+
+Required protections before production integration include:
+
+- Trusted user authentication in the main backend.
+- Server-side role and identity propagation.
+- Restricted access to the AI Agent endpoint.
+- Secure handling and rotation of API keys.
+- Protected communication between services.
+- Validation of database access permissions.
+- Testing against unverified or unauthorized AI-generated responses.
+
+Restricting tool execution prevents unauthorized database tool access but does not, by itself, guarantee that the AI model will never generate an incorrect or unverified claim.
+
+## 13. Deployment Status
+
+The AI Agent application entry point is:
+
+```text
+app.main:app
+```
+
+The service is designed to run with Uvicorn.
+
+The current team `render.yaml` configures the main backend, not the standalone AI Agent.
+
+Deployment of the AI Agent has not yet been completed or verified.
+
+A deployment configuration must account for the Agent's dependencies, environment variables, HTTP port, authentication, and persistent business data access.
+
+The local SQLite database is not a suitable persistent production data source on an ephemeral hosting filesystem.
+
+## 14. Testing Status
+
+The automated tests cover:
+
+- General Agent responses.
+- Product catalog tool calls.
+- Owner sales-analysis tool calls.
+- Customer access restrictions.
+- Customer order ownership.
+- Invalid tool arguments.
+- API authentication and role validation.
+- Basic database behavior.
+
+**Latest confirmed local result: 17 tests passed on November 21, 2026.**
+
+The result was obtained using a previously working Python environment and a seeded local development database.
+
+The following still require verification:
+
+- Clean environment installation and execution using uv.
+- Live OpenRouter integration.
+- End-to-end communication with the main backend.
+- Production data access.
+- Deployment security and runtime behavior.
+
+## 15. Integration Status
+
+### Implemented
+
+- FastAPI service.
+- Internal API key validation.
+- Role-specific tool availability.
+- Product catalog tool.
+- Customer order status tool.
+- Owner sales summary tool.
+- SQLAlchemy development data access.
+- Development seed script.
+- Automated tests.
+- uv dependency configuration.
 
 ### Pending
 
-- Verification that the complete product catalog has been imported.
-- Confirmation of the final database schema with the backend developer.
-- NestJS-to-FastAPI integration.
-- Trusted user identity propagation.
-- Production database integration.
-- Additional database integration and end-to-end tests.
-- Production security and deployment configuration.
+- Main backend integration.
+- Trusted identity propagation.
+- Approved production data access.
+- Live AI provider validation.
+- Additional security validation.
+- Render deployment.
+- End-to-end integration testing.
 
-## 12. Security Limitations
+## 16. Contract Change Management
 
-The current API uses a shared internal key. Anyone who possesses this key and can reach the endpoint may submit a role and customer identifier.
+Changes to request fields, authorization rules, response formats, endpoints, or data-access behavior must be coordinated between the AI Agent and main backend developers.
 
-Therefore, the API must not be publicly exposed in its current configuration.
-
-NestJS must act as the trusted entry point, and network access to FastAPI must be restricted.
-
-## 13. Final Integration Note
-
-This contract describes the current standalone Agent API and the proposed backend integration.
-
-Any changes to endpoint fields, roles, or data access must be coordinated between the AI Agent and backend developers before integration.
+This document describes the current standalone Agent API and does not imply that integration or deployment is already complete.

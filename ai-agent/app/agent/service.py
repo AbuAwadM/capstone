@@ -5,12 +5,11 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from tools import (
+from app.tools.tools import (
     search_catalog,
     get_order_status,
     get_sales_summary,
 )
-
 
 load_dotenv()
 

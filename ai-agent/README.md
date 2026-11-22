@@ -2,175 +2,243 @@
 
 ## 1. Project Overview
 
-OmniShop AI Agent is the AI component of the OmniShop graduation project.
+OmniShop AI Agent is the AI-powered sales assistant component of the OmniShop graduation project.
 
-The Agent uses Python, OpenRouter, and tool calling to understand user questions and retrieve relevant business information.
+The service uses Python, FastAPI, OpenRouter, and tool calling to process user inquiries and retrieve verified business information.
 
-The Agent supports three main functions:
+The Agent supports three core business functions:
 
 - Product catalog search.
 - Customer order status inquiries.
 - Owner sales analysis.
 
-The current implementation uses SQLAlchemy ORM with a local SQLite database for development and testing.
+The Agent also supports general conversational shopping assistance, including greetings and questions about customer preferences.
 
-Integration with the main OmniShop NestJS backend and its production database is pending.
+The service is maintained independently under `capstone/ai-agent/` and is intended to integrate with the main OmniShop FastAPI backend.
 
-## 2. Technologies
+## 2. Technology Stack
 
-- Python
-- FastAPI
-- OpenRouter
-- OpenAI Python SDK
-- SQLAlchemy ORM
-- Pydantic
-- SQLite (local development)
-- Pytest
-- JSON (seed data only)
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| FastAPI | REST API framework |
+| OpenRouter | AI model provider |
+| OpenAI Python SDK | OpenRouter-compatible client |
+| SQLAlchemy | Database ORM |
+| Pydantic | Data validation |
+| SQLite | Local development database |
+| uv | Python dependency and environment management |
+| Pytest | Automated testing |
+| JSON | Development seed data |
 
 ## 3. Project Structure
 
 ```text
-omnishop-agent/
-├── agent.py
-├── agent_service.py
-├── api.py
-├── database.py
-├── models.py
-├── schemas.py
-├── services.py
-├── tools.py
-├── data_provider.py
-├── seed.py
-├── products.json
-├── orders.json
-├── sales.json
-├── API_CONTRACT.md
-├── README.md
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── test/
-    ├── test_agent_service.py
-    ├── test_api.py
-    └── test_database.py
+capstone/
+├── backend/
+├── frontend/
+└── ai-agent/
+    ├── app/
+    │   ├── __init__.py
+    │   ├── main.py
+    │   ├── core/
+    │   │   └── __init__.py
+    │   ├── agent/
+    │   │   ├── __init__.py
+    │   │   └── service.py
+    │   ├── api/
+    │   │   ├── __init__.py
+    │   │   └── routes.py
+    │   ├── tools/
+    │   │   ├── __init__.py
+    │   │   └── tools.py
+    │   └── db/
+    │       ├── __init__.py
+    │       ├── database.py
+    │       ├── models.py
+    │       ├── schemas.py
+    │       └── services.py
+    ├── data/
+    │   ├── products.json
+    │   ├── orders.json
+    │   └── sales.json
+    ├── scripts/
+    │   ├── __init__.py
+    │   └── seed.py
+    ├── tests/
+    │   ├── __init__.py
+    │   ├── conftest.py
+    │   ├── test_agent_service.py
+    │   ├── test_api.py
+    │   └── test_database.py
+    ├── .env.example
+    ├── .gitignore
+    ├── .python-version
+    ├── pyproject.toml
+    ├── uv.lock
+    ├── requirements.txt
+    ├── API_CONTRACT.md
+    └── README.md
 ```
 
-The local SQLite database file, `.env`, and `.venv` are excluded from the handoff package.
+### Component Responsibilities
 
-## 4. Installation
+| Component | Responsibility |
+|---|---|
+| `app/main.py` | FastAPI application entry point |
+| `app/agent/service.py` | Agent behavior, OpenRouter communication, and tool orchestration |
+| `app/api/routes.py` | HTTP endpoints, API-key authentication, and error handling |
+| `app/tools/tools.py` | Interfaces for retrieving authorized business information |
+| `app/db/database.py` | Database engine and session management |
+| `app/db/models.py` | SQLAlchemy database models |
+| `app/db/schemas.py` | Pydantic schemas |
+| `app/db/services.py` | Business data queries |
+| `scripts/seed.py` | Development database initialization |
+| `data/` | Sample product, order, and sales datasets |
+| `tests/` | Automated tests |
 
-**Step 1: Open the project folder**
+## 4. Installation and Setup
+
+### Prerequisites
+
+- Python compatible with `pyproject.toml`.
+- uv package manager.
+- OpenRouter API key.
+- Git.
+
+The project declares support for Python versions `>=3.11,<3.14` and selects Python 3.12 through `.python-version`.
+
+### Step 1 — Open the AI Agent Directory
+
+From the team repository:
 
 ```powershell
-cd omnishop-agent
+cd ai-agent
 ```
 
-**Step 2: Create a virtual environment**
+### Step 2 — Install Dependencies
+
+Use uv to install dependencies from the lockfile:
 
 ```powershell
-python -m venv .venv
+uv sync --locked --group dev
 ```
 
-**Step 3: Activate the virtual environment (Windows PowerShell)**
+This command creates or updates the local `.venv` environment.
+
+The project includes `pytest` as a development dependency.
+
+For application-only installation:
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
+uv sync --locked --no-dev
 ```
 
-**Step 4: Install dependencies**
+### Step 3 — Configure Environment Variables
 
-```powershell
-python -m pip install -r requirements.txt
-```
+Create a `.env` file based on `.env.example`.
 
-## 5. Environment Configuration
-
-Create a `.env` file in the project root using `.env.example` as a reference.
+Required variables:
 
 ```dotenv
 OPENROUTER_API_KEY=your_openrouter_api_key
 AGENT_INTERNAL_API_KEY=your_secure_internal_key
+```
+
+The database configuration is optional:
+
+```dotenv
 DATABASE_URL=sqlite:///omnishop.db
 ```
 
-The `DATABASE_URL` variable is optional for local development. If omitted, `database.py` uses the default local SQLite database.
+If `DATABASE_URL` is omitted, the application uses the local `omnishop.db` file in the AI Agent project directory.
 
-Generate a secure internal API key:
+Generate an internal API key:
 
 ```powershell
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Never commit `.env` or expose API keys to frontend applications.
+Never commit `.env` or expose actual API keys in source code, screenshots, or documentation.
 
-## 6. Database Setup
+## 5. Development Database
 
-The project uses SQLAlchemy ORM.
+The project uses SQLAlchemy ORM with three development models:
 
-**Database components:**
-
-| File | Responsibility |
+| Model | Description |
 |---|---|
-| `database.py` | Database engine and session configuration |
-| `models.py` | Product, Order, and Sale models |
-| `schemas.py` | Pydantic schemas |
-| `services.py` | Database queries and data retrieval |
-| `tools.py` | Agent tool interfaces |
-| `seed.py` | Development database initialization |
+| `Product` | Product information, prices, and stock |
+| `Order` | Customer orders and their statuses |
+| `Sale` | Sales quantities and revenue data |
 
-**Initialize and seed the development database:**
+Sample data is stored in `data/`.
 
-```powershell
-python seed.py
-```
+### Initialize the Database
 
-The seed script creates the required tables and inserts development data from the JSON files.
-
-The JSON files are retained for local testing and are not the Agent's primary runtime data source.
-
-The production database schema and connection mechanism must be agreed upon with the NestJS backend developer.
-
-## 7. Run the API
-
-Start FastAPI:
+Run from the AI Agent project root:
 
 ```powershell
-python -m uvicorn api:app --reload
+uv run python -m scripts.seed
 ```
 
-Development API documentation:
+Expected output:
 
-http://127.0.0.1:8000/docs
+```text
+Database seeded successfully!
+```
 
-**Available endpoints:**
+The seed script creates the required tables and inserts development data while checking for existing records.
+
+The generated SQLite database is excluded from Git.
+
+The development seed script must not be executed against a production database.
+
+## 6. Running the API
+
+Start the FastAPI application:
+
+```powershell
+uv run python -m uvicorn app.main:app --reload
+```
+
+The default local address is:
+
+`http://127.0.0.1:8000`
+
+Interactive API documentation:
+
+`http://127.0.0.1:8000/docs`
+
+The application entry point is `app.main:app`.
+
+### Available Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/health` | Service health check |
-| POST | `/agent/chat` | Send a question to the AI Agent |
+| POST | `/agent/chat` | Process an AI Agent request |
 
-## 8. API Request and Response
+## 7. API Usage
 
-**Endpoint:** `POST /agent/chat`
+### Authentication
 
-**Required header:**
+The chat endpoint requires an internal API key.
 
 ```http
 X-Agent-Key: YOUR_INTERNAL_API_KEY
 ```
 
-**Example owner request:**
+### Customer Request
 
 ```json
 {
-  "message": "What is the best-selling product?",
-  "role": "owner",
-  "customer_id": null
+  "message": "What is the price of Linen throw blanket?",
+  "role": "customer",
+  "customer_id": "CUST-001"
 }
 ```
 
-**Example customer request:**
+### Order Status Request
 
 ```json
 {
@@ -180,84 +248,221 @@ X-Agent-Key: YOUR_INTERNAL_API_KEY
 }
 ```
 
-**Example response:**
+### Owner Request
 
 ```json
 {
-  "reply": "The best-selling product is Linen throw blanket, with 45 units sold."
+  "message": "What is the best-selling product?",
+  "role": "owner",
+  "customer_id": null
 }
 ```
 
-The response example uses development data.
+### Response Format
 
-## 9. Supported Agent Functions
+```json
+{
+  "reply": "The requested information is returned here."
+}
+```
 
-| Tool | Description | Authorized Role |
+Responses are generated dynamically. Business-specific responses depend on the available data and authorized tool calls.
+
+For complete API documentation, see `API_CONTRACT.md`.
+
+## 8. Agent Tools and Authorization
+
+| Tool | Purpose | Authorized Role |
 |---|---|---|
-| `search_catalog` | Retrieve product information | Customer, Owner |
-| `get_order_status` | Retrieve a customer's own order status | Customer |
-| `get_sales_summary` | Retrieve sales totals and best-/least-selling products | Owner |
+| `search_catalog` | Retrieve verified product information | Customer, Owner |
+| `get_order_status` | Retrieve the current customer's order status | Customer |
+| `get_sales_summary` | Retrieve store sales information | Owner |
 
-The Agent tools access business information through the service layer.
+### Catalog Search
 
-**Data Access Flow:**
+Searches the development product database for a matching product and returns available product details.
 
-AI Agent → Tools → Services → SQLAlchemy → Database
+### Order Status
 
-The Agent does not independently create, modify, or delete customer orders.
+Retrieves an order only when its identifier and the supplied customer identifier match.
+
+### Sales Analysis
+
+Provides an owner-accessible sales summary, including total revenue, units sold, and best-/least-selling products.
+
+### Agent Restrictions
+
+The Agent does not:
+
+- Create or modify orders.
+- Process payments.
+- Modify product inventory.
+- Generate unsupported promotions or discounts.
+- Intentionally disclose private order or sales information to unauthorized roles.
+
+Tool permissions are enforced in the application. Additional safeguards are still required to prevent unverified model-generated claims.
+
+## 9. Data Access Architecture
+
+```text
+User Request
+     |
+FastAPI Application
+     |
+AI Agent Service
+     |
+Authorized Tool
+     |
+Database Service
+     |
+SQLAlchemy
+     |
+Database
+```
+
+The Agent uses SQLAlchemy-based services for business data retrieval.
+
+JSON files are used for development database initialization, not as the primary runtime data source.
+
+The main backend database integration has not yet been finalized.
 
 ## 10. Security
 
-- The Agent API requires the internal `X-Agent-Key`.
-- The NestJS backend must authenticate users.
-- User roles must be determined by the trusted backend.
-- Customer identifiers must come from the authenticated user context.
-- The Agent restricts tool availability based on the supplied role.
-- The Agent API must not be publicly exposed with only the current shared-key authentication.
-- Production communication requires protected network access and secure transport.
+The AI Agent implements:
 
-The shared internal key authenticates the calling service, not the individual customer or owner.
+- Internal API-key validation.
+- Role validation.
+- Customer identifier requirements.
+- Role-specific tool availability.
+- Order ownership filtering.
+- API provider error handling.
+- Environment-based secret configuration.
 
-## 11. Testing
+### Security Boundaries
 
-Run the automated tests:
+The internal API key authenticates the calling service, not the individual end user.
+
+The main backend must authenticate users and derive trusted `role` and `customer_id` values before forwarding requests.
+
+The current shared-key mechanism must not be treated as sufficient protection for an unrestricted public production endpoint.
+
+The selected AI model may produce incorrect or unverified responses, particularly when responding without a tool call. Further response-validation and authorization testing is required before production use.
+
+Previously exposed API keys must be revoked and replaced.
+
+## 11. Automated Testing
+
+The project includes tests for:
+
+- Conversational responses.
+- Product tool calls.
+- Owner sales analysis.
+- Customer access restrictions.
+- Order ownership.
+- Invalid tool arguments.
+- API authentication.
+- Invalid user roles.
+- Database behavior.
+
+### Run Tests
+
+From the AI Agent project root:
 
 ```powershell
-python -m pytest -v
+uv run python -m pytest -q
 ```
 
-**Latest verified result:** 15 tests passed on November 19, 2026.
+The test configuration includes placeholder credentials for mocked Agent requests.
 
-The test suite covers Agent behavior, API behavior, and an initial SQLAlchemy database test.
+Some existing tests rely on seeded development data.
 
-Additional integration tests are required before production deployment.
+### Latest Verified Result
 
-## 12. Backend Integration
+**17 tests passed on November 21, 2026**, after the folder restructuring, using the previously working Python environment and the prepared development database.
 
-The NestJS backend developer is responsible for:
+A clean uv-managed environment and live provider integration still require independent validation.
 
-1. Authenticating users.
-2. Determining their authorized roles and customer identities.
-3. Sending authorized requests to the protected FastAPI endpoint.
-4. Returning Agent responses to the appropriate frontend interface.
-5. Coordinating production database access and schema compatibility.
+## 12. Integration with the Main Backend
 
-The final database architecture must be agreed upon before integration.
+The main OmniShop backend uses FastAPI and is maintained under `capstone/backend/`.
 
-See `API_CONTRACT.md` for the API integration contract.
+The AI Agent remains an independent Python service under `capstone/ai-agent/`.
 
-## 13. Current Limitations
+The main backend must:
 
-- SQLite is used for local development only.
-- Production database integration is pending.
-- The final database schema has not been confirmed with the backend developer.
-- NestJS authentication and identity propagation are not integrated.
-- End-to-end testing with the main backend is pending.
-- OpenRouter model availability and tool-calling reliability depend on the selected model/provider.
-- Complete product catalog migration must be verified before handoff.
+1. Authenticate users.
+2. Determine their authorized roles.
+3. Supply trusted customer identifiers.
+4. Forward requests to the Agent through an agreed integration mechanism.
+5. Handle responses and errors.
+6. Coordinate access to authoritative store data.
 
-## 14. Project Status
+The main backend integration file has been created but was empty at the time of review.
 
-The standalone AI Agent, FastAPI endpoint, SQLAlchemy data-access layer, and automated tests are available.
+The integration contract is documented in `API_CONTRACT.md`.
 
-The project is prepared for backend integration testing but is not yet production-ready.
+This AI Agent component does not modify the team's backend or frontend implementations.
+
+## 13. Deployment
+
+The AI Agent is intended to be deployed through Render using GitHub and uv.
+
+Deployment configuration must account for:
+
+- Project root: `ai-agent/`.
+- Python 3.12.
+- Locked dependencies.
+- FastAPI entry point: `app.main:app`.
+- Render's assigned listening port.
+- Required environment variables.
+- Access restrictions.
+- Reliable business data storage.
+
+The existing team `render.yaml` configures the main backend, not the standalone AI Agent.
+
+The AI Agent has not yet been deployed or verified on Render.
+
+Local SQLite data must not be treated as persistent production data on an ephemeral deployment filesystem.
+
+## 14. Development Environment Notes
+
+The original development environment used Python 3.15.2 and successfully executed the automated tests.
+
+During migration to uv, a Python 3.13 environment was created, but Windows Code Integrity prevented loading the native `jiter` dependency.
+
+The issue was associated with an enforced Windows application-control policy.
+
+The project now selects Python 3.12 in `.python-version`, but a clean installation and test run using Python 3.12 remain pending.
+
+Windows security controls must not be disabled as a workaround.
+
+## 15. Current Limitations
+
+- Live OpenRouter integration has not been fully verified.
+- Main backend integration is pending.
+- Production data access has not been finalized.
+- Local SQLite is used for development.
+- Clean uv installation and execution require verification.
+- Some tests depend on seeded data.
+- Complete security validation is pending.
+- Render deployment is pending.
+- Model availability and tool-calling support depend on the configured provider and model.
+
+## 16. Project Status
+
+The OmniShop AI Agent currently includes:
+
+- A structured Python application.
+- FastAPI endpoints.
+- OpenRouter integration code.
+- Conversational sales assistance.
+- Three authorized business tools.
+- SQLAlchemy data access.
+- Development seed data.
+- Automated tests.
+- uv dependency configuration.
+- API integration documentation.
+
+The project has passed its existing local test suite but is not yet considered production-ready.
+
+Further live integration testing, deployment validation, and security review are required.

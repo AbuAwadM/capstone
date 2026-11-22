@@ -2,8 +2,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from database import Base
-from models import Order
+from app.db.database import Base
+from app.db.models import Order
 
 
 def test_order_belongs_to_correct_customer():
@@ -22,20 +22,21 @@ def test_order_belongs_to_correct_customer():
                 quantity=1,
                 total=68.0,
                 currency="USD",
-                status="Shipped"
+                status="Shipped",
             )
         )
         session.commit()
 
         correct_customer_order = session.get(
-            Order, "ORD-TEST-1"
+            Order,
+            "ORD-TEST-1",
         )
 
         assert correct_customer_order.customer_id == "CUST-001"
 
         wrong_customer_orders = session.query(Order).filter_by(
             order_id="ORD-TEST-1",
-            customer_id="CUST-002"
+            customer_id="CUST-002",
         ).all()
 
         assert wrong_customer_orders == []

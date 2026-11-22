@@ -1,15 +1,13 @@
 
-import os
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from api import app
+
+from app.main import app
+from app.api.routes import INTERNAL_API_KEY
 
 
 client = TestClient(app)
-
-
-from api import INTERNAL_API_KEY
 
 
 def valid_headers():
@@ -22,8 +20,8 @@ def test_request_without_api_key():
         json={
             "message": "What is the best-selling product?",
             "role": "owner",
-            "customer_id": None
-        }
+            "customer_id": None,
+        },
     )
 
     assert response.status_code == 401
@@ -36,8 +34,8 @@ def test_request_with_wrong_api_key():
         json={
             "message": "What is the best-selling product?",
             "role": "owner",
-            "customer_id": None
-        }
+            "customer_id": None,
+        },
     )
 
     assert response.status_code == 401
@@ -50,8 +48,8 @@ def test_invalid_role():
         json={
             "message": "What is the best-selling product?",
             "role": "admin",
-            "customer_id": None
-        }
+            "customer_id": None,
+        },
     )
 
     assert response.status_code == 403
@@ -64,8 +62,8 @@ def test_customer_without_identity():
         json={
             "message": "Where is my order?",
             "role": "customer",
-            "customer_id": None
-        }
+            "customer_id": None,
+        },
     )
 
     assert response.status_code == 403
@@ -73,8 +71,8 @@ def test_customer_without_identity():
 
 def test_authorized_owner_request():
     with patch(
-        "api.ask_agent",
-        return_value="Best-selling: Linen throw blanket."
+        "app.api.routes.ask_agent",
+        return_value="Best-selling: Linen throw blanket.",
     ) as agent_mock:
 
         response = client.post(
@@ -83,8 +81,8 @@ def test_authorized_owner_request():
             json={
                 "message": "What is the best-selling product?",
                 "role": "owner",
-                "customer_id": None
-            }
+                "customer_id": None,
+            },
         )
 
         assert response.status_code == 200
@@ -96,5 +94,5 @@ def test_authorized_owner_request():
         agent_mock.assert_called_once_with(
             message="What is the best-selling product?",
             role="owner",
-            customer_id=None
+            customer_id=None,
         )

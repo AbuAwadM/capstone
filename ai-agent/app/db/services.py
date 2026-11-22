@@ -1,9 +1,14 @@
 
 from sqlalchemy import select
 
-from database import SessionLocal
-from models import Product, Order, Sale
-from schemas import ProductSchema, OrderStatusSchema, SalesSummarySchema
+from app.db.database import SessionLocal
+from app.db.models import Product, Order, Sale
+from app.db.schemas import (
+    ProductSchema,
+    OrderStatusSchema,
+    SalesSummarySchema,
+)
+
 
 def find_product(product_name: str):
     if not isinstance(product_name, str) or not product_name.strip():

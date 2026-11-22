@@ -2,8 +2,8 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from agent_service import ask_agent
-from tools import get_order_status
+from app.agent.service import ask_agent
+from app.tools.tools import get_order_status
 
 
 def mock_tool_call(name, arguments):
@@ -35,7 +35,7 @@ def test_general_greeting():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=response,
     ) as api_mock:
 
@@ -64,10 +64,10 @@ def test_product_search():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         side_effect=[first_response, final_response],
     ) as api_mock, patch(
-        "agent_service.search_catalog",
+        "app.agent.service.search_catalog",
         return_value={
             "name": "Linen throw blanket",
             "price": 68,
@@ -103,10 +103,10 @@ def test_owner_sales_analysis():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         side_effect=[first_response, final_response],
     ) as api_mock, patch(
-        "agent_service.get_sales_summary",
+        "app.agent.service.get_sales_summary",
         return_value={
             "best_selling": "Linen throw blanket",
         },
@@ -130,10 +130,10 @@ def test_customer_cannot_access_sales_tool():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=response,
     ) as api_mock, patch(
-        "agent_service.get_sales_summary",
+        "app.agent.service.get_sales_summary",
     ) as sales_mock:
 
         answer = ask_agent(
@@ -167,10 +167,10 @@ def test_customer_cannot_force_sales_tool_call():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=response,
     ) as api_mock, patch(
-        "agent_service.get_sales_summary",
+        "app.agent.service.get_sales_summary",
     ) as sales_mock:
 
         answer = ask_agent(
@@ -196,10 +196,10 @@ def test_customer_cannot_access_another_order():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=first_response,
     ) as api_mock, patch(
-        "agent_service.get_order_status",
+        "app.agent.service.get_order_status",
         return_value={
             "error": "Order not found or access denied",
         },
@@ -263,10 +263,10 @@ def test_invalid_tool_json():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=first_response,
     ) as api_mock, patch(
-        "agent_service.search_catalog",
+        "app.agent.service.search_catalog",
     ) as search_mock:
 
         answer = ask_agent(
@@ -292,10 +292,10 @@ def test_missing_product_name():
     )
 
     with patch(
-        "agent_service.client.chat.completions.create",
+        "app.agent.service.client.chat.completions.create",
         return_value=first_response,
     ) as api_mock, patch(
-        "agent_service.search_catalog",
+        "app.agent.service.search_catalog",
     ) as search_mock:
 
         answer = ask_agent(
