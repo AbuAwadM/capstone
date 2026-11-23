@@ -1,0 +1,35 @@
+
+{
+  "orders": [
+    {
+      "order_id": "ORD-1001",
+      "customer_id": "CUST-001",
+      "customer_name": "Zaid Mansour",
+      "product": "Linen throw blanket",
+      "quantity": 1,
+      "total": 68,
+      "currency": "USD",
+      "status": "Shipped"
+    },
+    {
+      "order_id": "ORD-1002",
+      "customer_id": "CUST-002",
+      "customer_name": "Sara Ahmad",
+      "product": "Linen cushion cover",
+      "quantity": 2,
+      "total": 58,
+      "currency": "USD",
+      "status": "Processing"
+    },
+    {
+      "order_id": "ORD-1003",
+      "customer_id": "CUST-003",
+      "customer_name": "Omar Khaled",
+      "product": "Leather card wallet",
+      "quantity": 1,
+      "total": 39,
+      "currency": "USD",
+      "status": "Delivered"
+    }
+  ]
+}

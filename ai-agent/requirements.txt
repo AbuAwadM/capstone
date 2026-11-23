@@ -1,0 +1,9 @@
+
+openai
+python-dotenv
+fastapi
+uvicorn
+pytest
+httpx
+requests
+SQLAlchemy==2.0.44

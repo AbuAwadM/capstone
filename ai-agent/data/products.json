@@ -1,0 +1,29 @@
+
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Linen throw blanket",
+      "price": 68,
+      "currency": "USD",
+      "stock": 14,
+      "colors": ["Natural", "Clay"]
+    },
+    {
+      "id": 2,
+      "name": "Linen cushion cover",
+      "price": 29,
+      "currency": "USD",
+      "stock": 12,
+      "colors": ["Natural", "Clay"]
+    },
+    {
+      "id": 3,
+      "name": "Leather card wallet",
+      "price": 39,
+      "currency": "USD",
+      "stock": 5,
+      "colors": ["Black", "Brown"]
+    }
+  ]
+}
