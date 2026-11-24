@@ -1,0 +1,8 @@
+[
+  { "id": "total-sales", "title": "Total Sales", "value": "$18,420" },
+  { "id": "current-orders", "title": "Current Orders", "value": "23" },
+  { "id": "inventory-value", "title": "Inventory Value", "value": "$42,860" },
+  { "id": "items-in-inventory", "title": "Items in Inventory", "value": "1,284" },
+  { "id": "total-products", "title": "Total Products", "value": "86" },
+  { "id": "customers-today", "title": "Customers Today", "value": "31" }
+]

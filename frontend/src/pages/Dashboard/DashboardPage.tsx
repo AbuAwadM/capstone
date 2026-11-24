@@ -1,68 +1,47 @@
-import dummyInsightsData from "../../data/dummyInsightsData.json";
+import dummyDashboardStats from "../../data/dummyDashboardStats.json";
+import type { Stat } from "../../types/dashboard";
 
-type InsightFormat = "currency" | "percent" | "number";
+const ADMINNAME = "Mohammad";
 
-interface Insight {
-  id: string;
-  title: string;
-  value: number;
-  format: InsightFormat;
-  icon: string;
-}
-
-interface DashboardCardProps {
-  title: string;
-  value: string;
-  iconSrc: string;
-}
-
-const insights = dummyInsightsData as Insight[];
-
-const formatters: Record<InsightFormat, Intl.NumberFormat> = {
-  currency: new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }),
-  percent: new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1,
-  }),
-  number: new Intl.NumberFormat("en-US"),
-};
-
-function getIconUrl(fileName: string) {
-  return new URL(`../../assets/${fileName}`, import.meta.url).href;
-}
-
-function DashboardCard({ title, value, iconSrc }: DashboardCardProps) {
+function DashboardHeading() {
+  function formatToday(date: Date = new Date()) {
+    const weekday = date.toLocaleDateString("en-US", { weekday: "long" });
+    const month = date.toLocaleDateString("en-US", { month: "long" });
+    return `${weekday}, ${date.getDate()} ${month}`;
+  }
   return (
-    <div>
-      <div>
-        <img src={iconSrc} alt="" width={40} height={40} />
-        <p>{title}</p>
-        <p>{value}</p>
-      </div>
+    <div className="flex flex-col gap-1 mb-6">
+      <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        Welcome, {ADMINNAME}
+      </h1>
+      <h6 className="text-sm font-medium text-gray-500">{formatToday()}</h6>
+    </div>
+  );
+}
+
+// Placeholder data — replace with the response from the FastAPI endpoint.
+const STATS: Stat[] = dummyDashboardStats;
+
+function DataBox({ id, title, value }: Stat) {
+  return (
+    <div id={id} className="flex flex-col gap-1 p-4 bg-white">
+      <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+      <p className="text-2xl font-bold text-gray-900">{value}</p>
     </div>
   );
 }
 
 function DashboardPage() {
   return (
-    <>
-      <h1>Dashboard</h1>
-
-      <div>
-        {insights.map((insight) => (
-          <div key={insight.id}>
-            <DashboardCard
-              title={insight.title}
-              value={formatters[insight.format].format(insight.value)}
-              iconSrc={getIconUrl(insight.icon)}
-            />
-          </div>
+    <div className="h-full overflow-y-auto p-8">
+      <DashboardHeading />
+      <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
+      <div className="grid grid-cols-1 gap-px mt-4 overflow-hidden bg-gray-100 rounded-lg shadow sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {STATS.map((stat) => (
+          <DataBox key={stat.id} {...stat} />
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
