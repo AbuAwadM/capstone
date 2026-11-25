@@ -3,6 +3,7 @@ import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import DropDown from "@/components/ui/DropDown";
 import ImageUpload from "@/components/ui/ImageUpload";
+import type { Product } from "@/types/product";
 import { CATEGORY_OPTIONS } from "../constants";
 
 interface ProductFormValues {
@@ -26,6 +27,18 @@ const EMPTY_FORM: ProductFormValues = {
   aiDescription: "",
   description: "",
 };
+
+// Fields the table doesn't have yet (SKU, descriptions) start empty until the API provides them.
+function toFormValues(product: Product | null): ProductFormValues {
+  if (!product) return EMPTY_FORM;
+  return {
+    ...EMPTY_FORM,
+    name: product.name,
+    price: String(product.price),
+    stock: String(product.stock),
+    category: product.category,
+  };
+}
 
 const inputClassName =
   "w-full px-3 py-2 text-sm text-gray-900 bg-white border border-gray-200 rounded-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600";
@@ -57,8 +70,14 @@ function FormField({ label, hint, className = "", children }: FormFieldProps) {
   );
 }
 
-function ProductEditSidePanel() {
-  const [form, setForm] = useState<ProductFormValues>(EMPTY_FORM);
+interface ProductEditSidePanelProps {
+  // null = creating a new product.
+  product: Product | null;
+}
+
+function ProductEditSidePanel({ product }: ProductEditSidePanelProps) {
+  const initialForm = toFormValues(product);
+  const [form, setForm] = useState<ProductFormValues>(initialForm);
   // Bumped on reset so ImageUpload remounts and drops its preview.
   const [resetCount, setResetCount] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -70,23 +89,25 @@ function ProductEditSidePanel() {
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     // TODO: send to the FastAPI endpoint.
-    console.log("Save product", { ...form, price: Number(form.price), stock: Number(form.stock) });
+    console.log("Save product", { id: product?.id, ...form, price: Number(form.price), stock: Number(form.stock) });
   }
 
   function handleConfirmDelete() {
     setIsDeleteDialogOpen(false);
     // TODO: call the FastAPI delete endpoint, then remove the product from the table.
-    console.log("Delete product");
+    console.log("Delete product", product?.id);
   }
 
   function handleReset() {
-    setForm(EMPTY_FORM);
+    setForm(initialForm);
     setResetCount((count) => count + 1);
   }
 
   return (
     <div className="product-edit-section flex flex-col h-full bg-white rounded-lg shadow p-4">
-      <h2 className="shrink-0 text-lg font-semibold pb-3 mb-4 border-b border-gray-200">Edit Product</h2>
+      <h2 className="shrink-0 text-lg font-semibold pb-3 mb-4 border-b border-gray-200">
+        {product ? "Edit Product" : "New Product"}
+      </h2>
 
       {/* The two description boxes grow/shrink to fill the leftover height. */}
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 gap-3">
@@ -203,14 +224,16 @@ function ProductEditSidePanel() {
 
         {/* Delete sits apart on the left so it's harder to hit by mistake. */}
         <div className="flex items-center justify-between shrink-0 gap-2 pt-3 border-t border-gray-200">
-          <Button type="button" color="danger" onClick={() => setIsDeleteDialogOpen(true)}>
-            Delete
-          </Button>
-          <div className="flex gap-2">
+          {product && (
+            <Button type="button" color="danger" onClick={() => setIsDeleteDialogOpen(true)}>
+              Delete
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
             <Button type="button" color="clear" onClick={handleReset}>
               Reset
             </Button>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit">{product ? "Save changes" : "Add product"}</Button>
           </div>
         </div>
       </form>

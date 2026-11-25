@@ -7,4 +7,5 @@ export type Product = {
   price: number;
   stock: number;
   visibleToAi: boolean;
+  category: string;
 };

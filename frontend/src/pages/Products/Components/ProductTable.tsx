@@ -1,21 +1,8 @@
-import { useState } from "react";
 import Toggle from "@/components/ui/Toggle";
-import dummyProducts from "@/data/dummyProducts.json";
 import type { Product, ProductStatus } from "@/types/product";
-
-// Placeholder data — replace with the response from the FastAPI endpoint.
-const PRODUCTS = dummyProducts as Product[];
+import { getStockStatus } from "../utils";
 
 const COLUMNS = ["Product", "Price", "Stock", "Visible to AI", "Status"];
-
-// At or below this many units, a product counts as low stock.
-const LOW_STOCK_THRESHOLD = 25;
-
-function getStockStatus(stock: number): ProductStatus {
-  if (stock === 0) return "out-of-stock";
-  if (stock <= LOW_STOCK_THRESHOLD) return "low-stock";
-  return "active";
-}
 
 // Badge and stock-bar colours share one entry per status so they always match.
 const STATUS_STYLES: Record<
@@ -72,7 +59,7 @@ interface ProductTableRowProps {
   product: Product;
   maxStock: number;
   isSelected: boolean;
-  onSelect: (product: Product) => void;
+  onSelect: (id: string) => void;
   onToggleVisibleToAi: (id: string, visible: boolean) => void;
 }
 
@@ -88,12 +75,13 @@ function ProductTableRow({
   return (
     <tr
       tabIndex={0}
-      aria-selected={isSelected}
-      onClick={() => onSelect(product)}
+      // aria-selected is only valid inside role="grid"; aria-current works on a plain table.
+      aria-current={isSelected || undefined}
+      onClick={() => onSelect(product.id)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          onSelect(product);
+          onSelect(product.id);
         }
       }}
       className={`border-b border-gray-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 ${
@@ -128,29 +116,24 @@ function ProductTableRow({
   );
 }
 
-function ProductTable() {
-  const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  const [tableRows, setTableRows] = useState<ProductTableRowProps[]>([]);
+interface ProductTableProps {
+  products: Product[];
+  // Bars are scaled against this, so it stays the same while filtering.
+  maxStock: number;
+  emptyMessage: string;
+  selectedProductId: string | null;
+  onSelect: (id: string) => void;
+  onToggleVisibleToAi: (id: string, visible: boolean) => void;
+}
 
-  function handleToggleVisibleToAi(id: string, visible: boolean) {
-    setProducts((current) =>
-      current.map((product) =>
-        product.id === id ? { ...product, visibleToAi: visible } : product,
-      ),
-    );
-  }
-
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(
-    null,
-  );
-
-  function handleSelectProduct(product: Product) {
-    setSelectedProductId(product.id);
-    // TODO: open the product details (page or side panel) here.
-  }
-
-  const maxStock = Math.max(0, ...products.map((product) => product.stock));
-
+function ProductTable({
+  products,
+  maxStock,
+  emptyMessage,
+  selectedProductId,
+  onSelect,
+  onToggleVisibleToAi,
+}: ProductTableProps) {
   return (
     <div className="flex-1 min-h-0 overflow-auto bg-white rounded-lg shadow">
       <table className="min-w-full text-sm text-left">
@@ -174,7 +157,7 @@ function ProductTable() {
                 colSpan={COLUMNS.length}
                 className="px-4 py-12 text-center text-gray-400"
               >
-                No products yet.
+                {emptyMessage}
               </td>
             </tr>
           ) : (
@@ -184,8 +167,8 @@ function ProductTable() {
                 product={product}
                 maxStock={maxStock}
                 isSelected={product.id === selectedProductId}
-                onSelect={handleSelectProduct}
-                onToggleVisibleToAi={handleToggleVisibleToAi}
+                onSelect={onSelect}
+                onToggleVisibleToAi={onToggleVisibleToAi}
               />
             ))
           )}
