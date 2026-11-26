@@ -8,9 +8,9 @@ interface ButtonProps {
 }
 
 const sizeClasses = {
-  small: "px-2 py-1 text-sm",
-  medium: "px-4 py-2 text-base",
-  large: "px-6 py-3 text-lg",
+  small: "h-8 px-3 gap-1.5 text-sm rounded-md",
+  medium: "h-10 px-4 gap-2 text-sm rounded-lg",
+  large: "h-12 px-6 gap-2.5 text-base rounded-lg",
 };
 
 const colorClasses = {
@@ -32,7 +32,7 @@ function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`${sizeClasses[size]} ${colorClasses[color]} rounded-lg border border-gray-300 font-medium ${className}`}
+      className={`${sizeClasses[size]} ${colorClasses[color]} inline-flex items-center justify-center whitespace-nowrap border border-gray-300 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${className}`}
       onClick={onClick}
       type={type}
     >

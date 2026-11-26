@@ -1,0 +1,38 @@
+@reference "../../../index.css";
+
+.toolbox {
+  @apply flex h-[15%] shrink-0 flex-col ;
+}
+
+.heading {
+  @apply flex items-center justify-between
+}
+
+.heading h1 {
+  @apply text-3xl font-bold tracking-tight text-gray-900;
+}
+
+.stats{
+  @apply flex items-center gap-4;
+}
+
+.stats span {
+  @apply flex items-center gap-2 text-sm font-medium text-gray-500;
+
+}
+.stats span span {
+  @apply text-gray-900;
+}
+
+.filters {
+  @apply grid h-full grid-cols-4 items-center gap-4 px-1;
+}
+
+.searchBar {
+  @apply col-span-2;
+}
+
+.dropDown {
+  @apply col-span-1;
+}
+
